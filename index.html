@@ -735,15 +735,15 @@
                 <img src="${nearest.img}" class="img-fluid rounded" style="max-height:200px;" 
                     onerror="this.src='https://via.placeholder.com/400x300?text=${nearest.name}'">
             </div>
-            <h4 class="fw-bold text-dark">${nearest.name}</h4>
-            <p class="text-dark"><strong>Jarak:</strong> ${nearest.distance.toFixed(2)} km</p>
-            <p class="text-dark">
-                <strong>Status:</strong> 
+            <h4 class="text-dark" style="color: #000 !important;">${nearest.name}</h4>
+            <p class="text-dark" style="color: #000 !important;"><strong style="color: #000 !important;" class="text-dark">Jarak:</strong> ${nearest.distance.toFixed(2)} km</p>
+            <p class="text-dark" style="color: #000 !important;">
+                <strong class="text-dark" style="color: #000 !important;">Status:</strong> 
                 <span class="badge ${nearest.status === 'open' ? 'bg-success' : 'bg-danger'} text-dark fw-semibold">
                     ${nearest.status === 'open' ? 'Buka' : 'Tutup'}
                 </span>
             </p>
-            <p class="text-dark"><strong>Alamat:</strong> ${nearest.address}</p>
+            <p class="text-dark" style="color: #000 !important;"><strong>Alamat:</strong> ${nearest.address}</p>
         `;
 
             new bootstrap.Modal(document.getElementById("nearestModal")).show();
