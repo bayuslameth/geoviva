@@ -675,15 +675,15 @@
            <div class="col-md-6 col-lg-4 mb-4">
             <div class="location-card h-100">
                 <img src="${loc.img}" class="place-img w-100" alt="${loc.name}" onerror="this.src='https://via.placeholder.com/400x300?text=${loc.name}'">
-                <div class="card-content text-dark"
-                    <h5 class="text-dark">${loc.name}</h5>
-                    <p class="small text-dark">${loc.desc}</p>
-                    <p class="mb-2 text-dark"><i class="bi bi-geo-alt-fill"></i> ${loc.address}</p>
+                <div class="card-content"
+                    <h5 class=">${loc.name}</h5>
+                    <p class="small">${loc.desc}</p>
+                    <p class="mb-2"><i class="bi bi-geo-alt-fill"></i> ${loc.address}</p>
                     <div class="d-flex justify-content-between align-items-center">
-                        <span class="status-${loc.status} px-3 py-1 rounded text-dark fw-semibold">
+                        <span class="status-${loc.status} px-3 py-1 rounded fw-semibold">
                             ${loc.status === 'open' ? 'Buka' : 'Tutup'}
                         </span>
-                        ${distanceText ? `<span class="badge bg-primary fs-6 text-dark fw-semibold">${distanceText}</span>` : ''}
+                        ${distanceText ? `<span class="badge bg-primary fs-6 fw-semibold">${distanceText}</span>` : ''}
                     </div>
                 </div>
             </div>
