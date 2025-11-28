@@ -675,7 +675,7 @@
            <div class="col-md-6 col-lg-4 mb-4">
             <div class="location-card h-100">
                 <img src="${loc.img}" class="place-img w-100" alt="${loc.name}" onerror="this.src='https://via.placeholder.com/400x300?text=${loc.name}'">
-                <div class="card-content text-dark"> <!-- semua teks di dalam card jadi gelap -->
+                <div class="card-content text-dark"
                     <h5 class="text-dark">${loc.name}</h5>
                     <p class="small text-dark">${loc.desc}</p>
                     <p class="mb-2 text-dark"><i class="bi bi-geo-alt-fill"></i> ${loc.address}</p>
@@ -732,12 +732,18 @@
             const modalBody = document.getElementById("nearestModalBody");
             modalBody.innerHTML = `
             <div class="text-center mb-3">
-                <img src="${nearest.img}" class="img-fluid rounded" style="max-height:200px;" onerror="this.src='https://via.placeholder.com/400x300'">
+                <img src="${nearest.img}" class="img-fluid rounded" style="max-height:200px;" 
+                    onerror="this.src='https://via.placeholder.com/400x300?text=${nearest.name}'">
             </div>
-            <h4 class="fw-bold">${nearest.name}</h4>
-            <p><strong>Jarak:</strong> ${nearest.distance.toFixed(2)} km</p>
-            <p><strong>Status:</strong> <span class="badge ${nearest.status === 'open' ? 'bg-success' : 'bg-danger'}">${nearest.status === 'open' ? 'Buka' : 'Tutup'}</span></p>
-            <p><strong>Alamat:</strong> ${nearest.address}</p>
+            <h4 class="fw-bold text-dark">${nearest.name}</h4>
+            <p class="text-dark"><strong>Jarak:</strong> ${nearest.distance.toFixed(2)} km</p>
+            <p class="text-dark">
+                <strong>Status:</strong> 
+                <span class="badge ${nearest.status === 'open' ? 'bg-success' : 'bg-danger'} text-dark fw-semibold">
+                    ${nearest.status === 'open' ? 'Buka' : 'Tutup'}
+                </span>
+            </p>
+            <p class="text-dark"><strong>Alamat:</strong> ${nearest.address}</p>
         `;
 
             new bootstrap.Modal(document.getElementById("nearestModal")).show();
