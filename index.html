@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoViva - Temukan Tempat Makan Terdekat</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --accent: #4895ef;
+            --dark: #240046;
+            --light: #f8f9fa;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', sans-serif;
+            color: white;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .header-hero {
+            background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1517248135467-2c7ed3ed32ad?q=80&w=2070&auto=format') center/cover;
+            border-radius: 0 0 30px 30px;
+            padding: 4rem 0;
+        }
+
+        .location-card {
+            transition: all 0.4s ease;
+            border: none;
+            border-radius: 16px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .location-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .place-img {
+            height: 180px;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .location-card:hover .place-img {
+            transform: scale(1.1);
+        }
+
+        #map {
+            height: 400px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-gradient {
+            background: linear-gradient(45deg, var(--primary), var(--accent));
+            border: none;
+            border-radius: 50px;
+            padding: 12px 30px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .status-open {
+            background: rgba(34, 197, 94, 0.3);
+            color: #22c55e;
+        }
+
+        .status-closed {
+            background: rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+        }
+
+        .distance-badge {
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            color: white;
+            border-radius: 50px;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        /* Map Container */
+        #map {
+            height: 450px;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Filter Panel */
+        .filter-panel {
+            position: sticky;
+            top: 20px;
+        }
+
+        .filter-panel h5 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-control,
+        .form-select {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            color: white;
+            padding: 12px 16px;
+            font-size: 0.95rem;
+        }
+
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: var(--food-orange);
+            box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.2);
+            color: white;
+        }
+
+        .form-select option {
+            background: var(--dark);
+            color: white;
+        }
+
+        .form-range {
+            height: 6px;
+            border-radius: 10px;
+        }
+
+        .form-range::-webkit-slider-thumb {
+            background: #8CA9FF;
+            width: 20px;
+            height: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Location Cards */
+        .location-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: none;
+            border-radius: 20px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .location-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.18);
+        }
+
+        .place-img {
+            height: 200px;
+            object-fit: cover;
+            transition: transform 0.6s ease;
+        }
+
+        .location-card:hover .place-img {
+            transform: scale(1.15);
+        }
+
+        .card-content {
+            padding: 1.5rem;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-content h5 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: white;
+        }
+
+        .card-content p {
+            font-size: 0.9rem;
+            opacity: 0.85;
+            margin-bottom: 0.75rem;
+        }
+
+        .card-footer-info {
+            margin-top: auto;
+        }
+
+        /* Badges */
+        .status-open {
+            background: rgba(34, 197, 94, 0.25);
+            color: var(--success);
+            border: 1px solid rgba(34, 197, 94, 0.4);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status-closed {
+            background: rgba(239, 68, 68, 0.25);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .distance-badge {
+            background: linear-gradient(135deg, var(--food-orange), var(--food-yellow));
+            color: white;
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            box-shadow: 0 2px 10px rgba(255, 107, 107, 0.3);
+        }
+
+        /* Stats Display */
+        .stats-container {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-box {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(15px);
+            border-radius: 16px;
+            padding: 1.25rem;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-box h3 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+            background: linear-gradient(135deg, var(--food-orange), var(--food-yellow));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: rgb(255, 255, 255);
+            background-clip: text;
+        }
+
+        .stat-box p {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin: 0;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            opacity: 0.5;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state p {
+            opacity: 0.8;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-hero h1 {
+                font-size: 2rem;
+            }
+
+            #map {
+                height: 300px;
+            }
+
+            .stats-container {
+                flex-direction: column;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, .3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Hidden Real Tasikmalaya Locations -->
+    <div id="locationDatabase" style="display:none;">
+        <div class="place" data-name="Cafe Notre Socielle"
+            data-desc="Cafe aesthetic, kopi spesial & spot foto instagramable" data-status="open"
+            data-address="Jl. Cimulu No.32, Tawangsari, Kec. Tawang" data-lat="-7.322198407194652"
+            data-lon="108.22271578313662"
+            data-img="https://awsimages.detik.net.id/community/media/visual/2022/05/11/cafe-notre-socielle-1.png?w=1088">
+        </div>
+
+        <div class="place" data-name="Cafe Kantoor"
+            data-desc="Cafe vintage dengan nuansa Belanda, kopi & makanan ringan" data-status="open"
+            data-address="Jl. HZ. Mustofa No.297, Kahuripan, Kec. Tawang" data-lat="-7.339506119664917"
+            data-lon="108.2183340849868"
+            data-img="https://i.gojekapi.com/darkroom/gofood-indonesia/v2/images/uploads/7c2cf493-a41d-43f7-b17c-b935d15a6736_Go-Biz_20250403_151113.jpeg">
+        </div>
+
+        <div class="place" data-name="Chiller Cafe" data-desc="Cafe cozy di pinggir jalan, cocok buat nongkrong malam"
+            data-status="open" data-address="Jl. Sutisna Senjaya, Cikalang, Kec. Tawang" data-lat="-7.330018956449264"
+            data-lon="108.23320842349534"
+            data-img="https://i0.wp.com/madhang.com/wp-content/uploads/Chiller-Cafe-Tasikmalaya.jpg?resize=1440%2C1440&ssl=1">
+        </div>
+
+        <div class="place" data-name="MIKO Food & Beverage" data-desc="Kopi, rice bowl & dessert kekinian"
+            data-status="open" data-address="Jl. KH. Lukmanul Hakim, Tuguraja, Kec. Cihideung"
+            data-lat="-7.340201628996056" data-lon="108.21376641567234"
+            data-img="https://assets.pikiran-rakyat.com/crop/0x0:0x0/1200x675/photo/2024/03/28/4180993401.jpg"></div>
+
+        <div class="place" data-name="Nameless Coffee" data-desc="Coffee shop hidden gem di Gunung Tandala"
+            data-status="open" data-address="Gunungtandala, Kec. Kawalu" data-lat="-7.382340764591188"
+            data-lon="108.23279598369302"
+            data-img="https://static.spotapps.co/website_images/ab_websites/386100_website_v1/social.jpg"></div>
+
+        <div class="place" data-name="911 Coffee" data-desc="Kopi hitam pekat & roti bakar klasik" data-status="open"
+            data-address="Jl. Kapten Naseh No.7, Panglayungan, Kec. Cipedes" data-lat="-7.316949346858419"
+            data-lon="108.23485559859192"
+            data-img="https://assets.pikiran-rakyat.com/crop/0x0:0x0/x/photo/2022/12/16/3496826982.jpg"></div>
+
+        <div class="place" data-name="Shelter Galunggung" data-desc="Cafe dengan view kawah Gunung Galunggung"
+            data-status="open" data-address="Wisata Gunung Galunggung, Linggajati, Kec. Sukaratu"
+            data-lat="-7.269240294512114" data-lon="108.0967644813425"
+            data-img="https://liburanyuk.co.id/wp-content/uploads/2020/12/87344711_290129692015064_5516349631110683177_n-1024x606.jpg">
+        </div>
+
+        <div class="place" data-name="Kopi Rempah Trem" data-desc="Kopi rempah tradisional & camilan khas Sunda"
+            data-status="open" data-address="Jl. Ibrahim Adjie No.16, Indihiang" data-lat="-7.331615433958279"
+            data-lon="108.21139681634429"
+            data-img="https://i.gojekapi.com/darkroom/gofood-indonesia/v2/images/uploads/44129bb9-fade-4958-ab9d-f9d894a83356_Go-Biz_20240719_225918.jpeg">
+        </div>
+
+        <div class="place" data-name="MARTA 208" data-desc="Modern cafe dengan menu western & coffee art"
+            data-status="open" data-address="Jl. R.E. Martadinata No.208, Cipedes" data-lat="-7.31070035167543"
+            data-lon="108.21093727155368"
+            data-img="https://img.lovepik.com/photo/20211119/medium/lovepik-street-cafe-picture_500250215.jpg"></div>
+
+        <div class="place" data-name="48 Island" data-desc="Cafe rooftop dengan live music malam hari"
+            data-status="open" data-address="Jl. Sule Setianegara, Setiaratu, Kec. Cibeureum"
+            data-lat="-7.342525193842733" data-lon="108.23535921943648"
+            data-img="https://sisparnas.com/imgdata/740340.jpg"></div>
+
+        <div class="place" data-name="Soto Ayam Kampung Nonoy" data-desc="Soto ayam kampung legendaris Tasik"
+            data-status="open" data-address="Jl. Gubernur Sewaka, Mangkubumi" data-lat="-7.337063731080306"
+            data-lon="108.23962509281031"
+            data-img="https://static.where-e.com/Indonesia/West_Java_Province/Singaparna/Soto-Ayam-Kampung-Nonoy_d4fdc3721cdcbc231fdc0b7e9cddfb60.jpg">
+        </div>
+
+        <div class="place" data-name="Donat SiBungsu Mangkubumi" data-desc="Donat premium topping melimpah"
+            data-status="open" data-address="Jl. Gubernur Sewaka, Bunderan Bypas, Mangkubumi"
+            data-lat="-7.343492102659252" data-lon="108.1976744421142"
+            data-img="https://i.gojekapi.com/darkroom/gofood-indonesia/v2/images/uploads/d29ab741-4b4d-4136-9675-c69dab4374b4_Go-Biz_20211208_131342.jpeg">
+        </div>
+
+        <div class="place" data-name="Mie Gacoan Tasikmalaya - Siliwangi"
+            data-desc="Mie pedas level setan & dimsum viral" data-status="open"
+            data-address="Jl. Siliwangi No.29, Tugujaya, Kec. Cihideung" data-lat="-7.348662763432029"
+            data-lon="108.22030853656469"
+            data-img="https://kilangbara.com/wp-content/uploads/2023/12/407095970_738851128282947_1006396188403993973_n-1024x1024.jpg">
+        </div>
+    </div>
+
+
+    <!-- Hero Header -->
+    <header class="header-hero text-center">
+        <div class="container">
+            <h1 class="display-3 fw-bold mb-3">Kuliner Tasikmalaya</h1>
+            <p class="lead mb-4">Temukan tempat makan, cafe, dan jajanan terenak di sekitarmu</p>
+            <button class="btn btn-gradient btn-lg" id="findNearestBtn">
+                Temukan Tempat Terdekat
+            </button>
+        </div>
+    </header>
+
+    <div class="container my-5">
+        <div class="container my-5">
+            <!-- Stats -->
+            <div class="stats-container">
+                <div class="stat-box glass-card">
+                    <h3 id="totalPlaces">13</h3>
+                    <p>Total Tempat</p>
+                </div>
+                <div class="stat-box glass-card">
+                    <h3 id="nearestDistance">-</h3>
+                    <p>Terdekat</p>
+                </div>
+                <div class="stat-box glass-card">
+                    <h3 id="avgDistance">-</h3>
+                    <p>Rata-rata</p>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <div id="map"></div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="glass-card p-4 filter-panel">
+                        <h5><i class="bi bi-funnel-fill"></i> Filter & Urutkan</h5>
+                        <input type="text" class="form-control mb-3" id="searchInput" placeholder="Cari nama tempat...">
+                        <select class="form-select mb-3" id="sortToggle">
+                            <option value="nearest">Terdekat</option>
+                            <option value="farthest">Terjauh</option>
+                            <option value="name">Nama (a-z)</option>
+                        </select>
+                        <div class="mb-3">
+                            <label class="form-label d-flex justify-content-between">
+                                <span>Radius Pencarian</span>
+                                <strong id="radiusValue">20 km</strong>
+                            </label>
+                            <input type="range" class="form-range" id="radiusSlider" min="1" max="20" value="20">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4 mt-3" id="resultsContainer">
+                <!-- Results injected here -->
+            </div>
+        </div>
+    </div>
+
+    <footer class="text-white text-center py-3 mt-5">
+        <div class="container">
+            <p class="mb-1">©2025 GeoViva Production.</p>
+            <p class="mb-1">Made For Algebra Linear And Matrix Learning Purposes (Group 33).</p>
+        </div>
+    </footer>
+
+
+    <!-- Modal -->
+    <div class="modal fade" id="nearestModal" tabindex="-1" aria-labelledby="nearestModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-dark" id="nearestModalLabel">Nearest Cafe / Restaurant</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="nearestModalBody">
+                    <!-- Filled dynamically by JS -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        let locations = [],
+            userLocation = null,
+            map = null;
+
+        $(document).ready(function () {
+            loadTasikmalayaLocations();
+            initMap();
+            requestLocation();
+
+            $('#searchInput, #sortToggle, #radiusSlider').on('input change', debounce(renderResults, 300));
+            $('#findNearestBtn').on('click', () => userLocation ? findAndShowNearest() : alert('Aktifkan lokasi dulu ya!'));
+        });
+
+        function loadTasikmalayaLocations() {
+            $('.place').each(function (i) {
+                const el = $(this);
+                locations.push({
+                    id: i,
+                    name: el.data('name'),
+                    desc: el.data('desc'),
+                    status: el.data('status'),
+                    address: el.data('address'),
+                    lat: parseFloat(el.data('lat')),
+                    lon: parseFloat(el.data('lon')),
+                    img: el.data('img') || 'https://via.placeholder.com/400x300?text=No+Image',
+                    distance: null
+                });
+            });
+            $('#totalPlaces').text(locations.length);
+        }
+
+        function initMap() {
+            map = L.map('map').setView([-7.3355, 108.2185], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap'
+            }).addTo(map);
+        }
+
+        function requestLocation() {
+            if (!navigator.geolocation) {
+                console.warn("Geolocation tidak didukung browser");
+                return showManualInput();
+            }
+
+            // Paksa GPS akurat tinggi + no cache
+            navigator.geolocation.getCurrentPosition(pos => {
+                userLocation = {
+                    lat: pos.coords.latitude,
+                    lon: pos.coords.longitude,
+                    accuracy: pos.coords.accuracy
+                };
+
+                console.log("Lokasi kamu berhasil didapat:", userLocation);
+
+                map.setView([userLocation.lat, userLocation.lon], 15);
+                addUserMarker();
+                calculateAllDistances();
+                renderResults();
+                updateStats();
+
+            }, err => {
+                console.error("Gagal ambil lokasi:", err);
+                alert("Gagal mengambil lokasi otomatis. Gunakan input manual.");
+                showManualInput();
+            }, {
+                enableHighAccuracy: true,
+                timeout: 15000,
+                maximumAge: 0
+            });
+        }
+
+        function showManualInput() {
+            const lat = prompt("Masukkan latitude (contoh: -7.3355)", "-7.3355");
+            const lon = prompt("Masukkan longitude (contoh: 108.2185)", "108.2185");
+            if (lat && lon && !isNaN(lat) && !isNaN(lon)) {
+                userLocation = { lat: parseFloat(lat), lon: parseFloat(lon) };
+                console.log("Lokasi manual:", userLocation);
+                map.setView([userLocation.lat, userLocation.lon], 15);
+                addUserMarker();
+                calculateAllDistances();
+                renderResults();
+                updateStats();
+            }
+        }
+
+        function addUserMarker() {
+            // Hapus marker user sebelumnya kalau ada
+            if (window.userMarker) window.userMarker.remove();
+            window.userMarker = L.marker([userLocation.lat, userLocation.lon], {
+                icon: userIcon()
+            })
+                .addTo(map)
+                .bindPopup("<strong>Kamu di sini!</strong><br>Akurasi: ±" + (userLocation.accuracy || 50) + "m")
+                .openPopup();
+        }
+
+        // PERBAIKAN HAVERSINE YANG BENAR (ini yang tadinya bikin jarak ngaco!)
+        function haversineDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
+        function calculateAllDistances() {
+            if (!userLocation) return;
+            locations.forEach(loc => {
+                loc.distance = haversineDistance(
+                    userLocation.lat, userLocation.lon,
+                    loc.lat, loc.lon
+                );
+            });
+            // Urutkan ulang biar stats langsung akurat
+            locations.sort((a, b) => a.distance - b.distance);
+        }
+
+        function updateStats() {
+            if (!userLocation || locations.length === 0) return;
+
+            const validDistances = locations.map(l => l.distance);
+            const nearest = Math.min(...validDistances);
+            const avg = validDistances.reduce((a, b) => a + b, 0) / validDistances.length;
+
+            $('#nearestDistance').text(nearest.toFixed(nearest < 10 ? 2 : 1) + ' km');
+            $('#avgDistance').text(avg.toFixed(1) + ' km');
+        }
+
+        function renderResults() {
+            const query = $('#searchInput').val().toLowerCase().trim();
+            const radius = parseFloat($('#radiusSlider').val());
+            $('#radiusValue').text(radius + ' km');
+
+            let filtered = locations.filter(loc => {
+                const matchesSearch = (loc.name + loc.desc + loc.address).toLowerCase().includes(query);
+                const withinRadius = !userLocation || loc.distance <= radius;
+                return matchesSearch && withinRadius;
+            });
+
+            const sortType = $('#sortToggle').val();
+            if (sortType === 'farthest') filtered.sort((a, b) => b.distance - a.distance);
+            else if (sortType === 'name') filtered.sort((a, b) => a.name.localeCompare(b.name));
+            else filtered.sort((a, b) => a.distance - b.distance); // nearest default
+
+            $('#resultsContainer').empty();
+
+            if (filtered.length === 0) {
+                $('#resultsContainer').html(`
+                <div class="col-12">
+                    <div class="glass-card empty-state">
+                        <i class="bi bi-emoji-frown fs-1"></i>
+                        <h3>Tidak ada tempat ditemukan</h3>
+                        <p>Coba perbesar radius atau kosongkan pencarian</p>
+                    </div>
+                </div>
+            `);
+                updateMapMarkers([]);
+                return;
+            }
+
+            filtered.forEach(loc => {
+                const distanceText = loc.distance !== null ? loc.distance.toFixed(loc.distance < 10 ? 2 : 1) + ' km' : '';
+                const card = `
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="location-card h-100">
+                    <img src="${loc.img}" class="place-img w-100" alt="${loc.name}" onerror="this.src='https://via.placeholder.com/400x300?text=${loc.name}'">
+                    <div class="card-content">
+                        <h5>${loc.name}</h5>
+                        <p class="small text-light">${loc.desc}</p>
+                        <p class="mb-2"><i class="bi bi-geo-alt-fill"></i> ${loc.address}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="status-${loc.status} px-3 py-1 rounded">
+                                ${loc.status === 'open' ? 'Buka' : 'Tutup'}
+                            </span>
+                            ${distanceText ? `<span class="badge bg-primary fs-6">${distanceText}</span>` : ''}
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+                $('#resultsContainer').append(card);
+            });
+
+            updateMapMarkers(filtered);
+        }
+
+        function updateMapMarkers(list) {
+            // Hapus semua marker kecuali tile layer
+            map.eachLayer(layer => {
+                if (layer instanceof L.Marker) layer.remove();
+            });
+
+            // Tambah marker tempat
+            list.forEach(loc => {
+                const dist = loc.distance ? ` • ${loc.distance.toFixed(1)} km` : '';
+                L.marker([loc.lat, loc.lon])
+                    .bindPopup(`<strong>${loc.name}</strong><br>${loc.address}${dist}`)
+                    .addTo(map);
+            });
+
+            // Tambah kembali marker user
+            if (userLocation && window.userMarker) {
+                window.userMarker.addTo(map).openPopup();
+            }
+        }
+
+        function userIcon() {
+            return L.divIcon({
+                html: `<div style="background:#ef4444;color:white;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:4px solid white;box-shadow:0 4px 20px rgba(239,68,68,0.6);font-weight:bold;">Kamu</div>`,
+                iconSize: [40, 40],
+                className: 'user-marker'
+            });
+        }
+
+        function findAndShowNearest() {
+            if (!userLocation || locations.length === 0) return;
+
+            const nearest = locations.reduce((a, b) => (a.distance < b.distance ? a : b));
+
+            map.setView([nearest.lat, nearest.lon], 17);
+
+            const modalBody = document.getElementById("nearestModalBody");
+            modalBody.innerHTML = `
+            <div class="text-center mb-3">
+                <img src="${nearest.img}" class="img-fluid rounded" style="max-height:200px;" onerror="this.src='https://via.placeholder.com/400x300'">
+            </div>
+            <h4 class="fw-bold">${nearest.name}</h4>
+            <p><strong>Jarak:</strong> ${nearest.distance.toFixed(2)} km</p>
+            <p><strong>Status:</strong> <span class="badge ${nearest.status === 'open' ? 'bg-success' : 'bg-danger'}">${nearest.status === 'open' ? 'Buka' : 'Tutup'}</span></p>
+            <p><strong>Alamat:</strong> ${nearest.address}</p>
+        `;
+
+            new bootstrap.Modal(document.getElementById("nearestModal")).show();
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+    </script>
+</body>
+
+</html>
